@@ -1,0 +1,73 @@
+import aiogram
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import asyncio
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher import FSMContext
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+from config import *
+from texts import *
+from keyboards import *
+
+TOKEN = I_KUDA_BOT
+bot = aiogram.Bot(token=TOKEN)
+dp = aiogram.Dispatcher(bot, storage=MemoryStorage())
+
+# Клавиатура для главного меню (обычные кнопки)
+start_meny= ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text='Купить'),
+            KeyboardButton(text='О нас')
+        ]
+    ],
+    resize_keyboard=True  # Делает кнопки адаптированными по размеру
+)
+
+
+catalog = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='Алмаз', callback_data='product_buying')],
+        [InlineKeyboardButton(text='Золото', callback_data='product_buying')],
+        [InlineKeyboardButton(text='Кварц', callback_data='product_buying')],
+        [InlineKeyboardButton(text='Бриллиант', callback_data='product_buying')]
+    ]
+)
+
+
+@dp.message_handler(text='Купить')
+async def get_buying_list(message):
+    number = 1
+    with open('1.jpg', 'rb') as photo:
+        await message.answer_photo(photo, f'Название: Алмаз | Описание: высшая проба НАСТОЯЩЕГО АЛМАЗА | Цена: {number * 100} RUB' )
+    with open('2.jpg', 'rb') as photo2:
+        await message.answer_photo(photo2, f'Навзание: Золото | Описание: высшая проба НАСТОЯЩЕГО КУСКА ЗОЛОТА | Цена: {number * 200} RUB')
+    with open('3.jpg', 'rb') as photo3:
+        await message.answer_photo(photo3, f'Название: Кварц | Описание: красивый качественный кварц | Цена: {number * 300} RUB')
+    with open('4.jpg', 'rb') as photo4:
+        await message.answer_photo(photo4, f'Название: Бриллиант | Описание: бриллиант ВЫСШЕЙ ПРОБЫ | Цена: {number * 400} RUB')
+    await message.answer('выберите понравившейся вам товар для покупки: ', reply_markup=catalog)
+
+
+@dp.message_handler(commands=['start'])
+async def start_menu(message):
+    await message.answer(f'Добро пожаловать, {message.from_user.username}. Я бот помогающий подобрать вам разные драгоценности.'
+                         , reply_markup=start_meny)
+
+
+@dp.message_handler(text='О нас')
+async def price(message):
+    with open('5.jpg', 'rb') as photo:
+        await message.answer_photo(photo,
+                    'Мы продаем ЛУЧШИЕ ДРАГОЦЕННОСТИ уже на протяжении 5-ти лет и занимаем лидирующие позиции на рынке!'
+                   , reply_markup=start_meny)
+
+
+@dp.callback_query_handler(text='product_buying')
+async def send_confirm_message(call):
+    await call.message.answer('Вы успешно приборели товар! ')
+
+if __name__ == '__main__':
+    aiogram.executor.start_polling(dp, skip_updates=True)
